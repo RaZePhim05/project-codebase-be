@@ -1,4 +1,3 @@
-
 const restify = require('restify');
 const corsMiddleware = require('restify-cors-middleware');
 const project = require('../../package.json');
@@ -6,12 +5,13 @@ const basicAuth = require('../auth/basic_auth_helper');
 const jwtAuth = require('../auth/jwt_auth_helper');
 const wrapper = require('../helpers/utils/wrapper');
 const userHandler = require('../modules/user/handlers/api_handler');
+const postHandler = require('../modules/articles/handlers/api_handler');
 const mongoConnectionPooling = require('../helpers/databases/mongodb/connection');
 
 function AppServer() {
   this.server = restify.createServer({
     name: `${project.name}-server`,
-    version: project.version
+    version: project.version,
   });
 
   this.server.serverKey = '';
@@ -27,7 +27,7 @@ function AppServer() {
     // ['*'] -> to expose all header, any type header will be allow to access
     // X-Requested-With,content-type,GET, POST, PUT, PATCH, DELETE, OPTIONS -> header type
     allowHeaders: ['Authorization'],
-    exposeHeaders: ['Authorization']
+    exposeHeaders: ['Authorization'],
   });
   this.server.pre(corsConfig.preflight);
   this.server.use(corsConfig.actual);
@@ -44,7 +44,12 @@ function AppServer() {
   this.server.post('/api/users/v1', basicAuth.isAuthenticated, userHandler.postDataLogin);
   this.server.get('/api/users/v1', jwtAuth.verifyToken, userHandler.getUser);
   this.server.post('/api/users/v1/register', basicAuth.isAuthenticated, userHandler.registerUser);
-
+  //client end point request
+  this.server.get('/articles/:title', jwtAuth.verifyToken, postHandler.getSingleArticle);
+  this.server.get('/articles', jwtAuth.verifyToken, postHandler.getArticles);
+  this.server.post('/articles', jwtAuth.verifyToken, postHandler.postArticlesData);
+  this.server.del('/articles/delete/:id', jwtAuth.verifyToken, postHandler.deleteArticles);
+  this.server.put('/articles/update/:id', jwtAuth.verifyToken, postHandler.updateArticles);
   //Initiation
   mongoConnectionPooling.init();
 }

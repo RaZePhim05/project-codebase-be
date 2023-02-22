@@ -1,4 +1,3 @@
-
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const config = require('../infra/configs/global_config');
@@ -7,7 +6,7 @@ const wrapper = require('../helpers/utils/wrapper');
 const { ERROR } = require('../helpers/http-status/status_code');
 const { UnauthorizedError, ForbiddenError } = require('../helpers/error');
 
-const getKey = keyPath => fs.readFileSync(keyPath, 'utf8');
+const getKey = (keyPath) => fs.readFileSync(keyPath, 'utf8');
 
 const generateToken = async (payload) => {
   const privateKey = getKey(config.get('/privateKey'));
@@ -15,7 +14,7 @@ const generateToken = async (payload) => {
     algorithm: 'RS256',
     audience: '97b33193-43ff-4e58-9124-b3a9b9f72c34',
     issuer: 'telkomdev',
-    expiresIn: '100m'
+    expiresIn: '1000m',
   };
   const token = jwt.sign(payload, privateKey, verifyOptions);
   return token;
@@ -34,13 +33,13 @@ const getToken = (headers) => {
 const verifyToken = async (req, res, next) => {
   const result = {
     err: null,
-    data: null
+    data: null,
   };
   const publicKey = fs.readFileSync(config.get('/publicKey'), 'utf8');
   const verifyOptions = {
     algorithm: 'RS256',
     audience: '97b33193-43ff-4e58-9124-b3a9b9f72c34',
-    issuer: 'telkomdev'
+    issuer: 'telkomdev',
   };
 
   const token = getToken(req.headers);
@@ -71,5 +70,5 @@ const verifyToken = async (req, res, next) => {
 
 module.exports = {
   generateToken,
-  verifyToken
+  verifyToken,
 };

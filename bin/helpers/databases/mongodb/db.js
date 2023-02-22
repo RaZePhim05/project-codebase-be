@@ -1,4 +1,3 @@
-
 const validate = require('validate.js');
 const mongoConnection = require('./connection');
 const wrapper = require('../../utils/wrapper');
@@ -38,12 +37,32 @@ class DB {
         return wrapper.error('Data Not Found Please Try Another Input');
       }
       return wrapper.data(recordset);
-
     } catch (err) {
       logger.log(ctx, err.message, 'Error find data in mongodb');
       return wrapper.error(`Error Find One Mongo ${err.message}`);
     }
-
+  }
+  async deleteOne(parameter) {
+    const ctx = 'mongodb-findOne';
+    const dbName = await this.getDatabase();
+    const result = await mongoConnection.getConnection(this.config);
+    if (result.err) {
+      logger.log(ctx, result.err.message, 'Error mongodb connection');
+      return result;
+    }
+    try {
+      const cacheConnection = result.data.db;
+      const connection = cacheConnection.db(dbName);
+      const db = connection.collection(this.collectionName);
+      const recordset = await db.deleteOne(parameter);
+      if (validate.isEmpty(recordset)) {
+        return wrapper.error('Data Not Found Please Try Another Input');
+      }
+      return wrapper.data(recordset);
+    } catch (err) {
+      logger.log(ctx, err.message, 'Error find data in mongodb');
+      return wrapper.error(`Error Find One Mongo ${err.message}`);
+    }
   }
 
   async findMany(parameter) {
@@ -63,12 +82,10 @@ class DB {
         return wrapper.error('Data Not Found , Please Try Another Input');
       }
       return wrapper.data(recordset);
-
     } catch (err) {
       logger.log(ctx, err.message, 'Error find data in mongodb');
       return wrapper.error(`Error Find Many Mongo ${err.message}`);
     }
-
   }
 
   async insertOne(document) {
@@ -88,12 +105,10 @@ class DB {
         return wrapper.error('Failed Inserting Data to Database');
       }
       return wrapper.data(document);
-
     } catch (err) {
       logger.log(ctx, err.message, 'Error insert data in mongodb');
       return wrapper.error(`Error Insert One Mongo ${err.message}`);
     }
-
   }
 
   async insertMany(data) {
@@ -114,12 +129,10 @@ class DB {
         return wrapper.error('Failed Inserting Data to Database');
       }
       return wrapper.data(document);
-
     } catch (err) {
       logger.log(ctx, err.message, 'Error insert data in mongodb');
       return wrapper.error(`Error Insert Many Mongo ${err.message}`);
     }
-
   }
 
   // nModified : 0 => data created
@@ -138,20 +151,20 @@ class DB {
       const db = connection.collection(this.collectionName);
       const data = await db.update(parameter, updateQuery, { upsert: true });
       if (data.result.nModified >= 0) {
-        const { result: { nModified } } = data;
+        const {
+          result: { nModified },
+        } = data;
         const recordset = await this.findOne(parameter);
         if (nModified === 0) {
           return wrapper.data(recordset.data);
         }
         return wrapper.data(recordset.data);
-
       }
       return wrapper.error('Failed upsert data');
     } catch (err) {
       logger.log(ctx, err.message, 'Error upsert data in mongodb');
       return wrapper.error(`Error Upsert Mongo ${err.message}`);
     }
-
   }
 
   async findAllData(fieldName, row, page, param) {
@@ -169,19 +182,15 @@ class DB {
       const parameterSort = {};
       parameterSort[fieldName] = 1;
       const parameterPage = row * (page - 1);
-      const recordset = await db.find(param).sort(parameterSort).limit(row).skip(parameterPage)
-        .toArray();
+      const recordset = await db.find(param).sort(parameterSort).limit(row).skip(parameterPage).toArray();
       if (validate.isEmpty(recordset)) {
         return wrapper.error('Data Not Found, Please Try Another Input');
       }
       return wrapper.data(recordset);
-
     } catch (err) {
       logger.log(ctx, err.message, 'Error upsert data in mongodb');
       return wrapper.error(`Error Mongo ${err.message}`);
     }
-
-
   }
 
   async countData(param) {
@@ -201,13 +210,10 @@ class DB {
         return wrapper.error('Data Not Found , Please Try Another Input');
       }
       return wrapper.data(recordset);
-
     } catch (err) {
       logger.log(ctx, err.message, 'Error count data in mongodb');
       return wrapper.error(`Error Mongo ${err.message}`);
     }
-
-
   }
 }
 
